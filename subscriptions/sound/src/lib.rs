@@ -5,13 +5,13 @@ pub mod pipewire;
 pub mod pulse;
 mod wpctl;
 
+use crate::pipewire::Availability;
 use cosmic::Task;
 use cosmic::iced_futures::MaybeSend;
 use futures::{Stream, StreamExt};
 use intmap::IntMap;
 use std::{sync::Arc, time::Duration};
-
-use crate::pipewire::Availability;
+use tokio::fs;
 
 pub type DeviceId = u32;
 pub type NodeId = u32;
@@ -20,6 +20,7 @@ pub type RouteId = u32;
 
 pub fn watch() -> impl Stream<Item = Message> + MaybeSend + 'static {
     async_fn_stream::fn_stream(|emitter| async move {
+        fix_wireplumber_stream_properties().await;
         let (cancel_tx, mut cancel_rx) = futures::channel::oneshot::channel::<()>();
 
         let (tx, pulse_rx) = futures::channel::mpsc::channel(1);
@@ -719,4 +720,32 @@ impl std::fmt::Debug for SubscriptionHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("SubscriptionHandle")
     }
+}
+
+async fn fix_wireplumber_stream_properties() {
+    let home_dir = std::env::home_dir().expect("no home dir");
+    let stream_properties_path = home_dir.join(".local/state/wireplumber/stream-properties");
+
+    let Ok(mut data) = fs::read_to_string(&stream_properties_path).await else {
+        return;
+    };
+
+    let mut insert_pos = 0;
+    let mut lines = data.split('\n');
+    while let Some(line) = lines.next() {
+        if line.starts_with("Input/Audio:") {
+            return;
+        } else if line.starts_with("Output") {
+            break;
+        }
+
+        insert_pos += 1 + line.len();
+    }
+
+    // Insert an Input/Audio property if none was found.
+    data.insert_str(insert_pos, "Input/Audio:application.id:org.PulseAudio.pavucontrol={\"channelMap\":[\"MONO\"], \"mute\":false, \"volume\":1.000000, \"channelVolumes\":[1.000000]}\n");
+    _ = fs::write(&stream_properties_path, &data).await;
+
+    // Then clear the cookie file to force it to be regenerated.
+    _ = fs::remove_file(&home_dir.join(".config/pulse/cookie")).await;
 }
