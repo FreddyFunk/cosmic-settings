@@ -11,7 +11,7 @@ use cosmic::iced_futures::MaybeSend;
 use futures::{Stream, StreamExt};
 use intmap::IntMap;
 use std::{sync::Arc, time::Duration};
-use tokio::fs;
+use tokio::{fs, process::Command};
 
 pub type DeviceId = u32;
 pub type NodeId = u32;
@@ -742,10 +742,22 @@ async fn fix_wireplumber_stream_properties() {
         insert_pos += 1 + line.len();
     }
 
+    // Stop wireplumber
+    _ = Command::new("systemctl")
+        .args(["--user", "stop", "wireplumber"])
+        .status()
+        .await;
+
     // Insert an Input/Audio property if none was found.
     data.insert_str(insert_pos, "Input/Audio:application.id:org.PulseAudio.pavucontrol={\"channelMap\":[\"MONO\"], \"mute\":false, \"volume\":1.000000, \"channelVolumes\":[1.000000]}\n");
     _ = fs::write(&stream_properties_path, &data).await;
 
     // Then clear the cookie file to force it to be regenerated.
     _ = fs::remove_file(&home_dir.join(".config/pulse/cookie")).await;
+
+    // Restart wireplumber.
+    _ = Command::new("systemctl")
+        .args(["--user", "start", "wireplumber"])
+        .status()
+        .await;
 }
