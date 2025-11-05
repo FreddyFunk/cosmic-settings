@@ -680,7 +680,7 @@ impl Page {
                 }
             }
 
-            let text = crate::utils::display_name(&output.name, output.physical);
+            let text = crate::utils::display_name(&output.name, output.physical, &*output.model);
 
             if text == active_display_name {
                 active_tab_pos = pos as u16;

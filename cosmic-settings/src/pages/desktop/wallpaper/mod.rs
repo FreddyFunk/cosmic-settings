@@ -518,13 +518,13 @@ impl Page {
     /// Updates configuration from the wallpaper service.
     fn wallpaper_service_config_update(&mut self, displays: HashMap<String, (String, (u32, u32))>) {
         let mut first = None;
-        for (name, (_model, physical)) in displays {
+        for (name, (model, physical)) in displays {
             let is_internal = "eDP-1" == name;
 
             let entity = self
                 .outputs
                 .insert()
-                .text(crate::utils::display_name(&name, physical))
+                .text(crate::utils::display_name(&name, physical, &*model))
                 .data(OutputName(name));
 
             if is_internal || first.is_none() {
