@@ -465,7 +465,11 @@ impl Model {
     fn pipewire_update(&mut self, event: pipewire::Event) {
         match event {
             pipewire::Event::ActiveProfile(id, profile) => {
+                let index = profile.index as u32;
                 self.active_profiles.insert(id, profile);
+                tokio::spawn(async move {
+                    wpctl::set_profile(id, index).await;
+                });
             }
 
             pipewire::Event::ActiveRoute(_id, _index, _route) => {}
@@ -559,6 +563,10 @@ impl Model {
 
                             if self.active_sink_node_name == node.node_name {
                                 self.set_default_sink_id(node.object_id);
+                                let node_name = node.node_name.clone();
+                                tokio::task::spawn(async move {
+                                    wpctl::set_default(node.object_id, &node_name, true).await;
+                                });
                             }
                         }
 
@@ -568,6 +576,10 @@ impl Model {
 
                             if self.active_source_node_name == node.node_name {
                                 self.set_default_source_id(node.object_id);
+                                let node_name = node.node_name.clone();
+                                tokio::task::spawn(async move {
+                                    wpctl::set_default(node.object_id, &node_name, false).await;
+                                });
                             }
                         }
                     }
