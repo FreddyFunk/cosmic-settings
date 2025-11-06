@@ -1,6 +1,6 @@
 use numtoa::BaseN;
 
-pub async fn set_default(id: u32, name: &str, is_sink: bool) {
+pub async fn set_default(id: u32) {
     let id = numtoa::BaseN::<10>::u32(id);
     _ = tokio::process::Command::new("wpctl")
         .args(["set-default", id.as_str()])
