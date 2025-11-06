@@ -9,15 +9,12 @@ pub async fn set_default(id: u32, name: &str, is_sink: bool) {
 }
 
 pub async fn set_profile(id: u32, index: u32) {
-    set("set-profile", id, index).await;
-}
-
-pub async fn set(command: &'static str, id: u32, index: u32) {
     let id = BaseN::<10>::u32(id);
     let index = BaseN::<10>::u32(index);
+    let value = ["{ index: ", index.as_str(), ", save: true }"].concat();
 
-    _ = tokio::process::Command::new("wpctl")
-        .args([command, id.as_str(), index.as_str()])
+    _ = tokio::process::Command::new("pw-cli")
+        .args(["s", id.as_str(), "Profile", &value])
         .status()
         .await;
 }
