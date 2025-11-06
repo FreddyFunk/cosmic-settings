@@ -466,7 +466,9 @@ impl Model {
                 });
             }
 
-            pipewire::Event::ActiveRoute(_id, _index, _route) => {}
+            pipewire::Event::ActiveRoute(id, index, route) => {
+                self.update_device_route(&route, id);
+            }
 
             pipewire::Event::AddProfile(id, profile) => {
                 let profiles = self.device_profiles.entry(id).or_default();
@@ -481,44 +483,7 @@ impl Model {
             }
 
             pipewire::Event::AddRoute(id, index, route) => {
-                match route.direction {
-                    pipewire::Direction::Output => {
-                        for (pos, &node) in self.sink_node_ids.iter().enumerate() {
-                            let Some(&device) = self.device_ids.get(node) else {
-                                continue;
-                            };
-
-                            if device != id {
-                                continue;
-                            }
-
-                            if let Some(node_name) = self.route_plug_check(node, device, &route) {
-                                self.sinks[pos] = node_name;
-                            }
-
-                            break;
-                        }
-                    }
-
-                    pipewire::Direction::Input => {
-                        for (pos, &node) in self.source_node_ids.iter().enumerate() {
-                            let Some(&device) = self.device_ids.get(node) else {
-                                continue;
-                            };
-
-                            if device != id {
-                                continue;
-                            }
-
-                            if let Some(node_name) = self.route_plug_check(node, device, &route) {
-                                self.sources[pos] = node_name;
-                            }
-
-                            break;
-                        }
-                    }
-                }
-
+                self.update_device_route(&route, id);
                 let routes = self.device_routes.entry(id).or_default();
                 if routes.len() < index as usize + 1 {
                     let additional = (index as usize + 1) - routes.capacity();
@@ -677,6 +642,46 @@ impl Model {
         };
 
         Some([&port_name, " - ", device_name].concat())
+    }
+
+    fn update_device_route(&mut self, route: &pipewire::Route, id: DeviceId) {
+        match route.direction {
+            pipewire::Direction::Output => {
+                for (pos, &node) in self.sink_node_ids.iter().enumerate() {
+                    let Some(&device) = self.device_ids.get(node) else {
+                        continue;
+                    };
+
+                    if device != id {
+                        continue;
+                    }
+
+                    if let Some(node_name) = self.route_plug_check(node, device, &route) {
+                        self.sinks[pos] = node_name;
+                    }
+
+                    break;
+                }
+            }
+
+            pipewire::Direction::Input => {
+                for (pos, &node) in self.source_node_ids.iter().enumerate() {
+                    let Some(&device) = self.device_ids.get(node) else {
+                        continue;
+                    };
+
+                    if device != id {
+                        continue;
+                    }
+
+                    if let Some(node_name) = self.route_plug_check(node, device, &route) {
+                        self.sources[pos] = node_name;
+                    }
+
+                    break;
+                }
+            }
+        }
     }
 
     fn translate_device_name(&self, input: &str) -> String {
