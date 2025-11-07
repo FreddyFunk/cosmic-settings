@@ -264,10 +264,6 @@ fn input() -> Section<crate::pages::Message> {
         .title(fl!("sound-input"))
         .descriptions(descriptions)
         .view::<Page>(move |_binder, page, section| {
-            if page.model.sources().is_empty() {
-                return widget::row().into();
-            }
-
             let slider = if page.amplification_source {
                 widget::slider(0..=150, page.model.source_volume, |change| {
                     Message::SourceVolumeChanged(change).into()
