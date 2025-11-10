@@ -884,6 +884,7 @@ about-os = Operating system
     .os-architecture = Operating system architecture
     .kernel = Kernel version
     .desktop-environment = Desktop environment
+    .desktop-version = Desktop version
     .windowing-system = Windowing system
 
 about-related = Related settings

@@ -28,6 +28,8 @@ pub struct Info {
     pub kernel_version: String,
     pub processor: String,
     pub windowing_system: String,
+    pub desktop_version: String,
+    pub library_versions: Vec<(String, String)>,
 }
 
 impl Info {
@@ -95,6 +97,27 @@ impl Info {
 
             info.desktop_environment = session;
         }
+
+        info.desktop_version = env!("COSMIC_COSMIC_SETTINGS_VERSION").to_string();
+
+        info.library_versions = vec![
+            (
+                "libcosmic".to_string(),
+                env!("COSMIC_LIBCOSMIC_VERSION").to_string(),
+            ),
+            (
+                "cosmic-comp".to_string(),
+                env!("COSMIC_COSMIC_COMP_CONFIG_VERSION").to_string(),
+            ),
+            (
+                "cosmic-panel".to_string(),
+                env!("COSMIC_COSMIC_PANEL_CONFIG_VERSION").to_string(),
+            ),
+            (
+                "cosmic-config".to_string(),
+                env!("COSMIC_COSMIC_CONFIG_VERSION").to_string(),
+            ),
+        ];
 
         if let Ok(output) = std::process::Command::new("lspci").output() {
             if let Ok(stdout) = std::str::from_utf8(&output.stdout) {

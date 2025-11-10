@@ -246,6 +246,7 @@ fn os() -> Section<crate::pages::Message> {
     let os_arch = descriptions.insert(fl!("about-os", "os-architecture"));
     let kernel = descriptions.insert(fl!("about-os", "kernel"));
     let desktop = descriptions.insert(fl!("about-os", "desktop-environment"));
+    let desktop_version = descriptions.insert(fl!("about-os", "desktop-version"));
     let windowing_system = descriptions.insert(fl!("about-os", "windowing-system"));
 
     Section::default()
@@ -253,7 +254,7 @@ fn os() -> Section<crate::pages::Message> {
         .descriptions(descriptions)
         .view::<Page>(move |_binder, page, section| {
             let desc = &section.descriptions;
-            settings::section()
+            let mut section_widget = settings::section()
                 .title(&section.title)
                 .add(settings::flex_item(
                     &*desc[os],
@@ -271,6 +272,18 @@ fn os() -> Section<crate::pages::Message> {
                     &*desc[desktop],
                     text::body(&page.info.desktop_environment),
                 ))
+                .add(settings::flex_item(
+                    &*desc[desktop_version],
+                    text::body(&page.info.desktop_version),
+                ));
+
+            // Add library versions
+            for (lib_name, lib_version) in &page.info.library_versions {
+                section_widget =
+                    section_widget.add(settings::flex_item(lib_name, text::body(lib_version)));
+            }
+
+            section_widget
                 .add(settings::flex_item(
                     &*desc[windowing_system],
                     text::body(&page.info.windowing_system),
