@@ -620,11 +620,10 @@ async fn handle_request(nm: &NetworkManager, req: Request) -> Event {
         )
         .await
         .is_ok(),
-        Request::ActivateVpn(uuid) => {
-            nm.connect_by_uuid(uuid, ConnectByUuidConfig::default())
-                .await
-                .is_ok()
-        }
+        Request::ActivateVpn(uuid) => nm
+            .connect_by_uuid(uuid, ConnectByUuidConfig::default())
+            .await
+            .is_ok(),
         Request::Deactivate(uuid) => deactivate_by_uuid(nm, uuid).await.is_ok(),
         Request::Disconnect(ssid) => disconnect_wifi_by_ssid(nm, ssid).await.is_ok(),
         Request::Forget(ssid) => nm.forget(ssid).await.is_ok(),
