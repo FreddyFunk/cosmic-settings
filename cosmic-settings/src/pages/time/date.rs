@@ -365,7 +365,7 @@ pub enum Message {
     TimezoneContext,
     TimezoneSearch(String),
     UpdateTime,
-    Surface(surface::Action),
+    Surface(surface::Action<crate::app::Message>),
 }
 
 impl page::AutoBind<crate::pages::Message> for Page {}

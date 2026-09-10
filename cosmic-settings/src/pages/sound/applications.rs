@@ -28,7 +28,7 @@ pub enum Message {
     SetMute(u32, bool),
     SetSink(u32, usize),
     SetVolume(u32, u32),
-    Surface(surface::Action),
+    Surface(surface::Action<crate::app::Message>),
     ToggleExpanded(u32),
 }
 
